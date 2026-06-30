@@ -1,0 +1,7 @@
+service: pulse-listen-Marcus-PC
+tcp: 51745
+web: http://localhost:51744
+sqlite: D:\Projects\personal\pulse-viewer\pulse-listen.db
+[2001-01-01T00:00:00.000Z] info hello from manual check
+[2001-01-01T00:00:01.000Z] network GET https://example.com/test
+[2001-01-01T00:00:01.000Z] network GET https://example.com/test 204
