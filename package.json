@@ -4,7 +4,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "go build -C cmd/pulse-lzfse -o ../../bin/pulse-lzfse.exe .",
+    "build": "bun run build:wasm",
+    "build:wasm": "bun run scripts/build-wasm.ts",
     "listen": "bun run src/cli.ts listen",
     "probe": "bun run src/cli.ts probe",
     "test": "bun test"

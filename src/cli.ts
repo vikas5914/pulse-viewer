@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { hostname } from "node:os";
 import { join } from "node:path";
 import { openDb } from "./db";
@@ -5,8 +6,56 @@ import { startMdns } from "./mdns";
 import { startTcp } from "./tcp";
 import { startWeb } from "./web";
 import type { PulseEvent } from "./protocol";
+import { closeLzfse } from "./lzfse";
 
 const command = Bun.argv[2];
+const defaultWebPort = 50513;
+
+function getServiceName() {
+  return process.env.PULSE_LISTEN_NAME?.trim() || getMacComputerName() || hostname().replace(/\.local$/i, "");
+}
+
+function getServiceHost() {
+  const name = getMacLocalHostName();
+  return name ? `${name.replace(/\.local$/i, "")}.local` : undefined;
+}
+
+function getMacComputerName() {
+  return getMacSystemName("ComputerName");
+}
+
+function getMacLocalHostName() {
+  return getMacSystemName("LocalHostName");
+}
+
+function getMacSystemName(key: "ComputerName" | "LocalHostName") {
+  if (process.platform !== "darwin") {
+    return null;
+  }
+
+  try {
+    const name = execFileSync("scutil", ["--get", key], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+    return name || null;
+  } catch {
+    return null;
+  }
+}
+
+function getWebPort() {
+  const raw = process.env.PULSE_LISTEN_WEB_PORT;
+  if (raw === undefined || raw.trim() === "") {
+    return defaultWebPort;
+  }
+
+  const port = Number(raw);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error(`invalid PULSE_LISTEN_WEB_PORT: ${raw}`);
+  }
+  return port;
+}
 
 if (command === "probe") {
   const tcp = Bun.listen({
@@ -25,8 +74,8 @@ if (command === "probe") {
       },
     },
   });
-  const serviceName = `pulse-listen-${hostname()}`;
-  const mdns = startMdns(serviceName, tcp.port);
+  const serviceName = getServiceName();
+  const mdns = startMdns(serviceName, tcp.port, getServiceHost());
 
   console.log(`service: ${serviceName}`);
   console.log(`tcp: ${tcp.port}`);
@@ -51,8 +100,8 @@ if (command !== "listen") {
 }
 
 const db = openDb(join(process.cwd(), "pulse-listen.db"));
-const web = startWeb(db);
-const tcp = startTcp((event) => {
+const web = startWeb(db, getWebPort());
+const tcp = await startTcp((event) => {
   if (event.kind === "message") {
     let line = `[${event.createdAt}]`;
     if (event.level !== null) {
@@ -91,23 +140,24 @@ const tcp = startTcp((event) => {
   db.insert(event);
   web.publish(event);
 });
-const serviceName = `pulse-listen-${hostname()}`;
-const mdns = startMdns(serviceName, tcp.port);
+const serviceName = getServiceName();
+const mdns = startMdns(serviceName, tcp.port, getServiceHost());
 
 console.log(`service: ${serviceName}`);
 console.log(`tcp: ${tcp.port}`);
 console.log(`web: http://localhost:${web.port}`);
 console.log(`sqlite: ${db.path}`);
 
-function stop() {
+async function stop() {
   mdns.stop();
   tcp.stop();
   web.stop();
   db.close();
+  await closeLzfse();
   process.exit(0);
 }
 
-process.on("SIGINT", stop);
-process.on("SIGTERM", stop);
+process.on("SIGINT", () => void stop());
+process.on("SIGTERM", () => void stop());
 
 await new Promise(() => {});

@@ -4,7 +4,7 @@ import { startTcp } from "./tcp";
 
 test("handshakes and receives a message event", async () => {
   const events: string[] = [];
-  const server = startTcp((event) => {
+  const server = await startTcp((event) => {
     if (event.message !== null) {
       events.push(event.message);
     }
@@ -17,21 +17,19 @@ test("handshakes and receives a message event", async () => {
       port: server.port,
       socket: {
         open(socket) {
-          socket.write(
-            Buffer.concat([
-              encodeJsonPacket(packetCode.clientHello, { version: "4.0.0" }),
-              encodeJsonPacket(packetCode.storeEventMessageStored, {
-                createdAt: 0,
-                label: "app",
-                level: 3,
-                message: "hello from test",
-              }),
-            ]),
-          );
+          Promise.all([
+            encodeJsonPacket(packetCode.clientHello, { version: "4.0.0" }),
+            encodeJsonPacket(packetCode.storeEventMessageStored, {
+              createdAt: 0,
+              label: "app",
+              level: 3,
+              message: "hello from test",
+            }),
+          ]).then((packets) => socket.write(Buffer.concat(packets)));
         },
-        data(socket, data) {
+        async data(socket, data) {
           chunks.push(data);
-          const parsed = takePackets(Buffer.concat(chunks));
+          const parsed = await takePackets(Buffer.concat(chunks));
           if (parsed.packets.length >= 2) {
             socket.end();
             resolve(parsed.packets.map((packet) => packet.code));

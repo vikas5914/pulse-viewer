@@ -10,19 +10,27 @@ Install Bun dependencies:
 bun install
 ```
 
-Build the LZFSE sidecar:
+Build the LZFSE WASM module:
 
-Windows:
+```bash
+bun run build:wasm
+```
+
+This writes `dist/wasm/pulse-lzfse.wasm` and `dist/wasm/wasm_exec.js`.
+
+For best performance, build the native LZFSE sidecar for the current platform:
+
+```bash
+go build -C cmd/pulse-lzfse -o ../../bin/pulse-lzfse .
+```
+
+On Windows:
 
 ```bash
 go build -C cmd/pulse-lzfse -o ../../bin/pulse-lzfse.exe .
 ```
 
-macOS/Linux:
-
-```bash
-go build -C cmd/pulse-lzfse -o ../../bin/pulse-lzfse .
-```
+At runtime, `pulse-listen` uses the native sidecar in long-lived `serve` mode when it exists. If the native sidecar is missing, it falls back to the Go `js/wasm` module.
 
 ## Run
 
@@ -39,6 +47,18 @@ The listener prints:
 
 The web UI is served on `http://localhost:<port>`.
 
+By default, the web UI uses a stable port:
+
+```bash
+http://localhost:50513
+```
+
+Override it with `PULSE_LISTEN_WEB_PORT` if needed:
+
+```bash
+PULSE_LISTEN_WEB_PORT=8080 bun run src/cli.ts listen
+```
+
 The SQLite database is created as `pulse-listen.db` in the current working directory.
 
 ## Firewall note
@@ -53,9 +73,9 @@ On Windows, the first run may trigger a firewall prompt for Bun. If discovery fa
 ## Known limitations
 
 - MVP is plain TCP only. Pulse passcode/TLS mode is not implemented.
-- LZFSE currently uses a small Go sidecar binary. The Bun app stays in TypeScript, but the sidecar must exist for the current platform.
+- LZFSE uses a long-lived Go sidecar when available and falls back to Go `js/wasm` when native binaries are unavailable.
 - mDNS behavior is only as good as the local Bonjour/Avahi stack and firewall rules on the host OS.
-- The UI only shows a live event stream and recent history. It does not render full Pulse detail views.
+- The UI shows recent events with request and response details, but it is not yet a full Pulse app replacement.
 
 ## Later packaging target
 
