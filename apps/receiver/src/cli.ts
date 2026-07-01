@@ -1,6 +1,5 @@
 import { execFileSync } from "node:child_process";
 import { hostname } from "node:os";
-import { join } from "node:path";
 import { openDb } from "./db";
 import { startMdns } from "./mdns";
 import { startTcp } from "./tcp";
@@ -9,6 +8,7 @@ import type { PulseEvent } from "./protocol";
 import { closeLzfse } from "./lzfse";
 
 const command = Bun.argv[2];
+const defaultTcpPort = 50512;
 const defaultWebPort = 50513;
 
 function getServiceName() {
@@ -17,7 +17,7 @@ function getServiceName() {
 
 function getServiceHost() {
   const name = getMacLocalHostName();
-  return name ? `${name.replace(/\.local$/i, "")}.local` : undefined;
+  return `${(name ?? hostname()).replace(/\.local$/i, "")}.local`;
 }
 
 function getMacComputerName() {
@@ -60,7 +60,7 @@ function getWebPort() {
 if (command === "probe") {
   const tcp = Bun.listen({
     hostname: "0.0.0.0",
-    port: 0,
+    port: defaultTcpPort,
     socket: {
       open(socket) {
         console.log(`pulse client connected: ${socket.remoteAddress}:${socket.remotePort}`);
@@ -99,7 +99,7 @@ if (command !== "listen") {
   process.exit(1);
 }
 
-const db = openDb(join(process.cwd(), "pulse-listen.db"));
+const db = openDb();
 const web = await startWeb(db, getWebPort());
 const tcp = await startTcp((event) => {
   if (event.kind === "message") {
@@ -139,14 +139,14 @@ const tcp = await startTcp((event) => {
 
   db.insert(event);
   web.publish(event);
-});
+}, defaultTcpPort);
 const serviceName = getServiceName();
 const mdns = startMdns(serviceName, tcp.port, getServiceHost());
 
 console.log(`service: ${serviceName}`);
 console.log(`tcp: ${tcp.port}`);
 console.log(`web: http://localhost:${web.port}`);
-console.log(`sqlite: ${db.path}`);
+console.log("storage: memory");
 
 async function stop() {
   mdns.stop();

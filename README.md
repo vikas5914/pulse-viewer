@@ -1,6 +1,6 @@
 # pulse-listen
 
-`pulse-listen` is a Bun receiver for Pulse `RemoteLogger`. It advertises `_pulse._tcp`, accepts the TCP connection from an iOS/macOS Pulse client, decodes incoming packets, stores events in SQLite, and mirrors them into a local React web UI over WebSocket.
+`pulse-listen` is a Bun receiver for Pulse `RemoteLogger`. It advertises `_pulse._tcp`, accepts the TCP connection from an iOS/macOS Pulse client, decodes incoming packets, stores events in memory, and mirrors them into a local React web UI over WebSocket.
 
 ## Layout
 
@@ -55,9 +55,9 @@ The listener prints:
 - advertised service name
 - TCP port
 - local web URL
-- SQLite path
+- storage mode
 
-The web UI is served on `http://localhost:<port>`.
+The Pulse TCP receiver uses port `50512`.
 
 By default, the web UI uses a stable port:
 
@@ -71,13 +71,28 @@ Override it with `PULSE_LISTEN_WEB_PORT` if needed:
 PULSE_LISTEN_WEB_PORT=8080 bun run listen
 ```
 
-The SQLite database is created as `pulse-listen.db` in the current working directory.
+On startup, the listener asks which network interface to use for mDNS. For non-interactive runs, set `PULSE_LISTEN_INTERFACE` to the LAN IPv4 address:
+
+```powershell
+$env:PULSE_LISTEN_INTERFACE = "192.168.1.16"
+bun run listen
+```
+
+Events are stored in memory and are cleared when the listener exits.
 
 ## Firewall note
 
 Discovery depends on mDNS/Bonjour traffic over UDP `5353`, and the Pulse client must also reach the advertised TCP port.
 
-On Windows, the first run may trigger a firewall prompt for Bun. If discovery fails, allow Bun on the active network and make sure:
+On Windows, run PowerShell as Administrator and add the required Private-network rules:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\add-windows-firewall-rules.ps1
+```
+
+The script allows `bun.exe` to receive TCP connections on port `50512` from `LocalSubnet`, and allows `bun.exe` to receive mDNS traffic on UDP `5353` from `LocalSubnet`.
+
+If discovery or connection still fails, make sure:
 
 - UDP `5353` multicast is not blocked
 - the advertised TCP port is reachable on the local network

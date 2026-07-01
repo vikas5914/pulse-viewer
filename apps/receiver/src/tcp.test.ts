@@ -8,7 +8,7 @@ test("handshakes and receives a message event", async () => {
     if (event.message !== null) {
       events.push(event.message);
     }
-  });
+  }, 0);
 
   const received = await new Promise<number[]>((resolve, reject) => {
     const chunks: Buffer[] = [];
