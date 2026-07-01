@@ -1,20 +1,27 @@
 {
-  "name": "pulse-listen",
-  "module": "src/cli.ts",
+  "name": "pulse-viewer",
   "type": "module",
   "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
   "scripts": {
     "build": "bun run build:wasm",
     "build:wasm": "bun run scripts/build-wasm.ts",
-    "listen": "bun run src/cli.ts listen",
-    "probe": "bun run src/cli.ts probe",
-    "test": "bun test"
+    "listen": "bun run apps/receiver/src/cli.ts listen",
+    "probe": "bun run apps/receiver/src/cli.ts probe",
+    "test": "bun test apps/receiver/src",
+    "typecheck": "bun --bun tsc --noEmit"
   },
   "dependencies": {
-    "bonjour-service": "^1.4.2"
+    "bonjour-service": "^1.4.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6"
   },
   "peerDependencies": {
     "typescript": "^5"

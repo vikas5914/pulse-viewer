@@ -1,6 +1,18 @@
 # pulse-listen
 
-`pulse-listen` is a Bun receiver for Pulse `RemoteLogger`. It advertises `_pulse._tcp`, accepts the TCP connection from an iOS/macOS Pulse client, decodes incoming packets, stores events in SQLite, and mirrors them into a tiny local web UI over WebSocket.
+`pulse-listen` is a Bun receiver for Pulse `RemoteLogger`. It advertises `_pulse._tcp`, accepts the TCP connection from an iOS/macOS Pulse client, decodes incoming packets, stores events in SQLite, and mirrors them into a local React web UI over WebSocket.
+
+## Layout
+
+```text
+apps/
+  receiver/  # Bun mDNS/TCP/WebSocket process
+  web/       # React UI bundled directly by Bun
+cmd/
+  pulse-lzfse/  # Go LZFSE sidecar and WASM wrapper
+scripts/
+  build-wasm.ts
+```
 
 ## Setup
 
@@ -35,7 +47,7 @@ At runtime, `pulse-listen` uses the native sidecar in long-lived `serve` mode wh
 ## Run
 
 ```bash
-bun run src/cli.ts listen
+bun run listen
 ```
 
 The listener prints:
@@ -56,7 +68,7 @@ http://localhost:50513
 Override it with `PULSE_LISTEN_WEB_PORT` if needed:
 
 ```bash
-PULSE_LISTEN_WEB_PORT=8080 bun run src/cli.ts listen
+PULSE_LISTEN_WEB_PORT=8080 bun run listen
 ```
 
 The SQLite database is created as `pulse-listen.db` in the current working directory.
@@ -82,7 +94,7 @@ On Windows, the first run may trigger a firewall prompt for Bun. If discovery fa
 Standalone Bun builds are still out of scope for this prototype, but the intended commands are:
 
 ```bash
-bun build --compile --target=bun-windows-x64 src/cli.ts --outfile dist/pulse-listen.exe
-bun build --compile --target=bun-darwin-arm64 src/cli.ts --outfile dist/pulse-listen-macos-arm64
-bun build --compile --target=bun-linux-x64 src/cli.ts --outfile dist/pulse-listen-linux-x64
+bun build --compile --target=bun-windows-x64 apps/receiver/src/cli.ts --outfile dist/pulse-listen.exe
+bun build --compile --target=bun-darwin-arm64 apps/receiver/src/cli.ts --outfile dist/pulse-listen-macos-arm64
+bun build --compile --target=bun-linux-x64 apps/receiver/src/cli.ts --outfile dist/pulse-listen-linux-x64
 ```

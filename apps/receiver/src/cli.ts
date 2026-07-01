@@ -94,13 +94,13 @@ if (command === "probe") {
 }
 
 if (command !== "listen") {
-  console.error("usage: bun run src/cli.ts listen");
-  console.error("usage: bun run src/cli.ts probe");
+  console.error("usage: bun run listen");
+  console.error("usage: bun run probe");
   process.exit(1);
 }
 
 const db = openDb(join(process.cwd(), "pulse-listen.db"));
-const web = startWeb(db, getWebPort());
+const web = await startWeb(db, getWebPort());
 const tcp = await startTcp((event) => {
   if (event.kind === "message") {
     let line = `[${event.createdAt}]`;

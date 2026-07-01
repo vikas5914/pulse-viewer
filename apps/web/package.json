@@ -1,0 +1,12 @@
+{
+  "name": "@pulse-viewer/web",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "bun build src/main.tsx --target=browser --outdir=dist"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  }
+}

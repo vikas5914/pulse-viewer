@@ -1,0 +1,11 @@
+{
+  "name": "@pulse-viewer/receiver",
+  "type": "module",
+  "private": true,
+  "module": "src/cli.ts",
+  "scripts": {
+    "listen": "bun run src/cli.ts listen",
+    "probe": "bun run src/cli.ts probe",
+    "test": "bun test src"
+  }
+}
