@@ -8,6 +8,8 @@ dist
 /dist/*
 !dist/sidecars/
 !dist/sidecars/**
+!dist/wasm/
+!dist/wasm/**
 bin
 *.tgz
 pulse-listen.db
