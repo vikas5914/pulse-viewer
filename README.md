@@ -8,8 +8,10 @@
 apps/
   receiver/  # Bun mDNS/TCP/WebSocket process
   web/       # React UI bundled directly by Bun
-cmd/
+sidecars/
   pulse-lzfse/  # Go LZFSE sidecar and WASM wrapper
+    native/     # native sidecar entrypoint
+    wasm/       # js/wasm entrypoint
 scripts/
   build-wasm.ts
 ```
@@ -33,13 +35,13 @@ This writes `dist/wasm/pulse-lzfse.wasm` and `dist/wasm/wasm_exec.js`.
 For best performance, build the native LZFSE sidecar for the current platform:
 
 ```bash
-go build -C cmd/pulse-lzfse -o ../../bin/pulse-lzfse .
+go build -C sidecars/pulse-lzfse -o ../../bin/pulse-lzfse ./native
 ```
 
 On Windows:
 
 ```bash
-go build -C cmd/pulse-lzfse -o ../../bin/pulse-lzfse.exe .
+go build -C sidecars/pulse-lzfse -o ../../bin/pulse-lzfse.exe ./native
 ```
 
 At runtime, `pulse-listen` uses the native sidecar in long-lived `serve` mode when it exists. If the native sidecar is missing, it falls back to the Go `js/wasm` module.
