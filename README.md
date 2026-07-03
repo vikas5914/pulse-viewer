@@ -32,6 +32,18 @@ bun run build:wasm
 
 This writes `dist/wasm/pulse-lzfse.wasm` and `dist/wasm/wasm_exec.js`.
 
+Build ready-made native LZFSE sidecars for Windows, macOS, and Linux:
+
+```bash
+bun run build:sidecars
+```
+
+This writes:
+
+- `dist/sidecars/pulse-lzfse-windows-amd64.exe`
+- `dist/sidecars/pulse-lzfse-darwin-arm64`
+- `dist/sidecars/pulse-lzfse-linux-amd64`
+
 For best performance, build the native LZFSE sidecar for the current platform:
 
 ```bash

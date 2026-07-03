@@ -30,10 +30,23 @@ export async function closeLzfse() {
 }
 
 export function getSidecarPath() {
-  let fileName = "pulse-lzfse";
-  if (process.platform === "win32") {
-    fileName = "pulse-lzfse.exe";
+  return getBundledSidecarPath() ?? getLocalSidecarPath();
+}
+
+function getBundledSidecarPath() {
+  const platform = process.platform === "win32" ? "windows" : process.platform;
+  const arch = process.arch === "x64" ? "amd64" : process.arch;
+  if (!["windows", "darwin", "linux"].includes(platform) || !["amd64", "arm64"].includes(arch)) {
+    return null;
   }
+
+  const extension = platform === "windows" ? ".exe" : "";
+  const path = fileURLToPath(new URL(`../../../dist/sidecars/pulse-lzfse-${platform}-${arch}${extension}`, import.meta.url));
+  return existsSync(path) ? path : null;
+}
+
+function getLocalSidecarPath() {
+  const fileName = process.platform === "win32" ? "pulse-lzfse.exe" : "pulse-lzfse";
   return fileURLToPath(new URL(`../../../bin/${fileName}`, import.meta.url));
 }
 

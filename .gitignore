@@ -4,6 +4,10 @@ node_modules
 # output
 out
 dist
+!/dist/
+/dist/*
+!dist/sidecars/
+!dist/sidecars/**
 bin
 *.tgz
 pulse-listen.db

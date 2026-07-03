@@ -7,6 +7,7 @@
   ],
   "scripts": {
     "build": "bun run build:wasm",
+    "build:sidecars": "bun run scripts/build-sidecars.ts",
     "build:wasm": "bun run scripts/build-wasm.ts",
     "listen": "bun run apps/receiver/src/cli.ts listen",
     "probe": "bun run apps/receiver/src/cli.ts probe",
