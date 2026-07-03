@@ -13,6 +13,7 @@ sidecars/
     native/     # native sidecar entrypoint
     wasm/       # js/wasm entrypoint
 scripts/
+  build-sidecars.ts
   build-wasm.ts
 ```
 
@@ -44,19 +45,7 @@ This writes:
 - `dist/sidecars/pulse-lzfse-darwin-arm64`
 - `dist/sidecars/pulse-lzfse-linux-amd64`
 
-For best performance, build the native LZFSE sidecar for the current platform:
-
-```bash
-go build -C sidecars/pulse-lzfse -o ../../bin/pulse-lzfse ./native
-```
-
-On Windows:
-
-```bash
-go build -C sidecars/pulse-lzfse -o ../../bin/pulse-lzfse.exe ./native
-```
-
-At runtime, `pulse-listen` uses the native sidecar in long-lived `serve` mode when it exists. If the native sidecar is missing, it falls back to the Go `js/wasm` module.
+At runtime, `pulse-listen` uses the matching native sidecar from `dist/sidecars` in long-lived `serve` mode. If that sidecar is missing, it falls back to the Go `js/wasm` artifacts in `dist/wasm`.
 
 ## Run
 

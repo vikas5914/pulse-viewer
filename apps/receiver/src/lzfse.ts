@@ -30,24 +30,21 @@ export async function closeLzfse() {
 }
 
 export function getSidecarPath() {
-  return getBundledSidecarPath() ?? getLocalSidecarPath();
+  return getBundledSidecarPath();
 }
 
 function getBundledSidecarPath() {
   const platform = process.platform === "win32" ? "windows" : process.platform;
   const arch = process.arch === "x64" ? "amd64" : process.arch;
-  if (!["windows", "darwin", "linux"].includes(platform) || !["amd64", "arm64"].includes(arch)) {
-    return null;
+  if (!["windows", "darwin", "linux"].includes(platform)) {
+    throw new Error(`unsupported LZFSE native sidecar platform: ${process.platform}`);
+  }
+  if (!["amd64", "arm64"].includes(arch)) {
+    throw new Error(`unsupported LZFSE native sidecar architecture: ${process.arch}`);
   }
 
   const extension = platform === "windows" ? ".exe" : "";
-  const path = fileURLToPath(new URL(`../../../dist/sidecars/pulse-lzfse-${platform}-${arch}${extension}`, import.meta.url));
-  return existsSync(path) ? path : null;
-}
-
-function getLocalSidecarPath() {
-  const fileName = process.platform === "win32" ? "pulse-lzfse.exe" : "pulse-lzfse";
-  return fileURLToPath(new URL(`../../../bin/${fileName}`, import.meta.url));
+  return fileURLToPath(new URL(`../../../dist/sidecars/pulse-lzfse-${platform}-${arch}${extension}`, import.meta.url));
 }
 
 async function createCodec(): Promise<Codec> {
@@ -127,7 +124,7 @@ class WasmCodec implements Codec {
     const wasmPath = fileURLToPath(new URL("../../../dist/wasm/pulse-lzfse.wasm", import.meta.url));
     if (!existsSync(wasmExecPath) || !existsSync(wasmPath)) {
       throw new Error(
-        `missing LZFSE native sidecar at ${getSidecarPath()} and missing WASM artifacts; run bun run build:wasm`,
+        `missing LZFSE native sidecar at ${getSidecarPath()} and missing WASM artifacts; run bun run build:sidecars && bun run build:wasm`,
       );
     }
 
